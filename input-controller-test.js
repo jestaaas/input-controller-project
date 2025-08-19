@@ -8,6 +8,7 @@ const initialActions = {
     right: { keys: [68, 39], enabled: true }, //d, right
     up: { keys: [87, 38], enabled: true }, //w, up
     down: { keys: [83, 40], enabled: true }, //s, down
+    repeat: {keys: [90, 88], enabled: true}, //z,x
 }
 
 const actionsForBinding = {
@@ -21,6 +22,8 @@ const COLOR_CYAN = "cyan";
 const COLOR_BLUE = "blue";
 const COLOR_BLACK = "black";
 const COLOR_GREEN = "green";
+
+const colors = [COLOR_MAGENTA, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_GREEN, COLOR_RED, COLOR_YELLOW];
 
 const block = document.getElementById("actionBlock");
 const controller = new InputController(
@@ -45,13 +48,15 @@ const movement = () => {
 
 movement();
 
-controller.target.addEventListener(InputController.ACTION_ACTIVATED, (e) => {
+controller.target.addEventListener(controller.ACTION_ACTIVATED, (e) => {
     switch (e.detail) {
         case "attach":
+            if (e.repeat) return;
             controller.attach(block);
             controller.target.style.backgroundColor = COLOR_MAGENTA;
             break;
         case "detach":
+            if (e.repeat) return;
             controller.detach();
             controller.target.style.backgroundColor = COLOR_BLACK;
             break;
@@ -64,11 +69,23 @@ controller.target.addEventListener(InputController.ACTION_ACTIVATED, (e) => {
             controller.target.style.backgroundColor = COLOR_GREEN;
             break;
         case "bind":
+            console.log("smth")
             controller.bindActions(actionsForBinding);
             controller.target.style.backgroundColor = COLOR_BLUE;
             break;
         case "jump":
+            console.log("smth")
             controller.target.style.backgroundColor = COLOR_CYAN;
             break;
+        case "repeat":
+            if (e.repeat) {
+                return;
+            }
+            console.log("smth")
+            controller.target.style.backgroundColor = colors[getRandomInt(colors.length)];
     }
 });
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}

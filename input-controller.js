@@ -1,4 +1,5 @@
 class InputController {
+
     enabled = true;
     focused = true;
 
@@ -12,13 +13,17 @@ class InputController {
 
     constructor(actionsToBind = {}, target = null) {
         this.actionsToBind = {};
+
         this.enabledActions = new Set();
         this.pressedKeys = new Set();
+        this.activeActions = new Set();
+
         this.target = target;
 
         window.addEventListener(this.BLUR, () => {
             this.focused = false;
             this.pressedKeys.clear();
+            this.clearAllActiveActions();
         });
         window.addEventListener(this.FOCUS, () => {
             this.focused = true;
@@ -52,6 +57,10 @@ class InputController {
         }
     }
 
+    clearAllActiveActions() {
+        this.activeActions.clear();
+    }
+
     enableAction(actionName) {
         if (this.actionsToBind[actionName]) {
             this.actionsToBind[actionName].enabled = true;
@@ -81,10 +90,14 @@ class InputController {
 
         document.removeEventListener(this.KEY_DOWN, this.handleKeyDown);
         document.removeEventListener(this.KEY_UP, this.handleKeyUp);
+
+        this.pressedKeys.clear();
+        this.clearAllActiveActions();
     }
 
     handleKeyDown = (e) => {
         if (!this.enabled || !this.focused) return;
+        if (this.pressedKeys.has(e.keyCode)) return;
 
         this.pressedKeys.add(e.keyCode);
         this.checkActionForKey(e.keyCode, true);
@@ -98,23 +111,31 @@ class InputController {
     };
 
     checkActionForKey(keyCode, isKeyDown) {
-        for (const actionName of this.enabledActions) {
-            const action = this.actionsToBind[actionName];
-            
-            if (action.keys.includes(keyCode)) {
-                const isActive = this.isActionActive(actionName);
+        let affectedAction = "";
 
-                if ((isKeyDown && isActive) || (!isKeyDown && !isActive)) {
-                    this.dispatchActionEvent(actionName, isActive);
-                }
+        for (const [actionName, actionData] of Object.entries(this.actionsToBind)) {
+            if (actionData.keys.includes(keyCode) && this.enabledActions.has(actionName)) {
+                affectedAction = actionName;
             }
+        }
+
+        const wasActive = this.activeActions.has(affectedAction);
+        const isActive = this.isActionActive(affectedAction);
+
+        if (isKeyDown && isActive && !wasActive) {
+            this.activeActions.add(affectedAction);
+            this.dispatchActionEvent(affectedAction, true);
+        }
+        else if (!isKeyDown && !isActive && wasActive) {
+            this.activeActions.delete(affectedAction);
+            this.dispatchActionEvent(affectedAction, false);
         }
     }
     
     dispatchActionEvent(actionName, isActivated) {
         if (!this.target) return;
 
-        const eventType = isActivated ? InputController.ACTION_ACTIVATED : InputController.ACTION_DEACTIVATED;
+        const eventType = isActivated ? this.ACTION_ACTIVATED : this.ACTION_DEACTIVATED;
 
         const newEvent = new CustomEvent(eventType, {
             detail: actionName,
