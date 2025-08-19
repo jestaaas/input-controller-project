@@ -69,19 +69,16 @@ controller.target.addEventListener(controller.ACTION_ACTIVATED, (e) => {
             controller.target.style.backgroundColor = COLOR_GREEN;
             break;
         case "bind":
-            console.log("smth")
             controller.bindActions(actionsForBinding);
             controller.target.style.backgroundColor = COLOR_BLUE;
             break;
         case "jump":
-            console.log("smth")
             controller.target.style.backgroundColor = COLOR_CYAN;
             break;
         case "repeat":
             if (e.repeat) {
                 return;
             }
-            console.log("smth")
             controller.target.style.backgroundColor = colors[getRandomInt(colors.length)];
     }
 });
