@@ -1,145 +1,140 @@
 class InputController {
-
     enabled = true;
     focused = true;
-    ACTION_ACTIVATED = "input-controller:activate";
-    ACTION_DEACTIVATED = "input-controller:deactivate";
 
-    COLOR_MAGENTA = "magenta";
-    COLOR_RED = "red";
-    COLOR_YELLOW = "yellow";
-    COLOR_CYAN = "cyan";
-    COLOR_BLUE = "blue";
-    COLOR_BLACK = "black";
-    COLOR_GREEN = "green";
+    ACTION_ACTIVATED = "input-controller:action-activated";
+    ACTION_DEACTIVATED = "input-controller:action-deactivated";
 
-    constructor(actionsToBind = null, target = null) {
-        this.actionsToBind = actionsToBind;
+    BLUR = "blur";
+    FOCUS = "focus";
+    KEY_DOWN = "keydown";
+    KEY_UP = "keyup";
+
+    constructor(actionsToBind = {}, target = null) {
+        this.actionsToBind = {};
+        this.enabledActions = new Set();
+        this.pressedKeys = new Set();
         this.target = target;
 
-        window.addEventListener("blur", () => {
+        window.addEventListener(this.BLUR, () => {
             this.focused = false;
+            this.pressedKeys.clear();
         });
-        window.addEventListener("focus", () => {
+        window.addEventListener(this.FOCUS, () => {
             this.focused = true;
         });
 
-        if (this.target != null) {
-            this.addListenersForElement();
-        }
+        this.bindActions(actionsToBind);
 
-    }
-
-    addListenersForElement() {
-        this.target.addEventListener(this.ACTION_ACTIVATED, (event) => {
-            if (!this.focused) return;
-            
-            switch(event.detail) {
-                case "attach":
-                    this.attach(this.target);
-                    break;
-                case "detach":
-                    this.detach();
-                    break;
-                case "activation":
-                    this.enableAction("detach");
-                    break;
-                case "deactivation":
-                    this.disableAction("detach");
-                    break;
-                case "bind":
-                    this.bindActions({"jump": {keys: [" "], enabled: true}})
-                    break;
-                case "jump":
-                    this.jump();
-                    break;
-            }
-        })
-        this.target.addEventListener(this.ACTION_DEACTIVATED, (event) => {
-            console.log(event.detail + " deactivated");
-        })
-    }
-
-    findActionByKey(keyCode) {
-        const keys = Object.keys(this.actionsToBind);
-
-        for (const key of keys) {
-            for (const item of this.actionsToBind[key].keys) {
-                if (item == keyCode) {
-                    return key;
-                }
-            }
+        if (this.target) {
+            this.attach(this.target);
         }
     }
 
     bindActions(actionsToBind) {
-        if (!this.enabled) {
-            return;
-        }
-        this.target.style.backgroundColor = this.COLOR_CYAN;
-        if (actionsToBind != null) {
-            Object.assign(this.actionsToBind, actionsToBind)
-        }
-        else {
-            this.actionsToBind = actionsToBind;
+        for (const [actionName, actionData] of Object.entries(actionsToBind)) {
+            if (!this.actionsToBind[actionName]) {
+                this.actionsToBind[actionName] = {
+                    keys: [],
+                    enabled: true,
+                };
+            }
+
+            actionData.keys.forEach((keyCode) => {
+                if (!this.actionsToBind[actionName].keys.includes(keyCode)) {
+                    this.actionsToBind[actionName].keys.push(keyCode);
+                }
+            });
+
+            if (this.actionsToBind[actionName].enabled) {
+                this.enabledActions.add(actionName);
+            }
         }
     }
 
     enableAction(actionName) {
-        const isActive = this.isActionActive(actionName)
-        if (!isActive && this.enabled) {
-            this.target.style.backgroundColor = this.COLOR_BLUE;
+        if (this.actionsToBind[actionName]) {
             this.actionsToBind[actionName].enabled = true;
+            this.enabledActions.add(actionName);
         }
     }
 
     disableAction(actionName) {
-        if (this.enabled) {
-            this.target.style.backgroundColor = this.COLOR_BLACK;
+        if (this.actionsToBind[actionName]) {
             this.actionsToBind[actionName].enabled = false;
+            this.enabledActions.delete(actionName);
         }
     }
 
     attach(target, dontEnable = false) {
-        this.target.style.backgroundColor = this.COLOR_YELLOW;
+        if (!dontEnable) this.enable = true;
 
-        if (!dontEnable) {
-            this.target = target;
-            this.enabled = true;
-            this.addListenersForElement();
-        }
+        this.detach();
+        this.target = target;
+
+        document.addEventListener(this.KEY_DOWN, this.handleKeyDown);
+        document.addEventListener(this.KEY_UP, this.handleKeyUp);
     }
 
     detach() {
-        if (this.enabled) {
-            this.target.style.backgroundColor = this.COLOR_GREEN;
-            removeEventListener(this.ACTION_ACTIVATED, () => {}, true);
-            removeEventListener(this.ACTION_DEACTIVATED, () => {}, true);
-            this.enabled = false;
-        }
+        if (!this.target) return;
+
+        document.removeEventListener(this.KEY_DOWN, this.handleKeyDown);
+        document.removeEventListener(this.KEY_UP, this.handleKeyUp);
     }
 
-    isActionActive(action) {
-        this.target.style.left = (Math.floor(Math.random() * (500 - 0 + 1)) + 0) + 'px'
-        return this.actionsToBind[action].enabled;
-    }
+    handleKeyDown = (e) => {
+        if (!this.enabled || !this.focused) return;
 
-    isKeyPressed(keyCode) {
-        const values = Object.values(this.actionsToBind);
+        this.pressedKeys.add(e.keyCode);
+        this.checkActionForKey(e.keyCode, true);
+    };
 
-        for (const value of values) {
-            if (value.enabled == false) continue;
+    handleKeyUp = (e) => {
+        if (!this.enabled || !this.focused) return;
 
-            for (const item of value.keys) {
-                if (keyCode == item) {
-                    return true;
+        this.pressedKeys.delete(e.keyCode);
+        this.checkActionForKey(e.keyCode, false);
+    };
+
+    checkActionForKey(keyCode, isKeyDown) {
+        for (const actionName of this.enabledActions) {
+            const action = this.actionsToBind[actionName];
+            
+            if (action.keys.includes(keyCode)) {
+                const isActive = this.isActionActive(actionName);
+
+                if ((isKeyDown && isActive) || (!isKeyDown && !isActive)) {
+                    this.dispatchActionEvent(actionName, isActive);
                 }
             }
         }
-        return false;
+    }
+    
+    dispatchActionEvent(actionName, isActivated) {
+        if (!this.target) return;
+
+        const eventType = isActivated ? InputController.ACTION_ACTIVATED : InputController.ACTION_DEACTIVATED;
+
+        const newEvent = new CustomEvent(eventType, {
+            detail: actionName,
+        })
+
+        this.target.dispatchEvent(
+            newEvent
+        );
     }
 
-    jump() {
-        this.target.style.backgroundColor = this.COLOR_MAGENTA;
+    isActionActive(actionName) {
+        if (!this.actionsToBind[actionName] || !this.enabledActions.has(actionName)) {
+            return false;
+        }
+        return this.actionsToBind[actionName].keys.some((keyCode) =>
+            this.isKeyPressed(keyCode)
+        );
+    }
+
+    isKeyPressed(keyCode) {
+        return this.pressedKeys.has(keyCode);
     }
 }
