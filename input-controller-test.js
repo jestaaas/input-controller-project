@@ -3,24 +3,24 @@ const initialActions = {
     detach: { keys: [69], enabled: true }, //e
     activation: { keys: [82], enabled: true }, //r
     deactivation: { keys: [84], enabled: true },//t
-    bind: {keys: [66], enabled: true},
-    left: { keys: [65], enabled: true }, //a, left
-    right: { keys: [68], enabled: true }, //d, right
-    up: { keys: [87], enabled: true }, //w, up
-    down: { keys: [83], enabled: true }, //s, down
+    bind: {keys: [66], enabled: true}, //b
+    left: { keys: [65, 37], enabled: true }, //a, left
+    right: { keys: [68, 39], enabled: true }, //d, right
+    up: { keys: [87, 38], enabled: true }, //w, up
+    down: { keys: [83, 40], enabled: true }, //s, down
 }
 
 const actionsForBinding = {
     jump: { keys: [32], enabled: true }, //space
 }
 
-COLOR_MAGENTA = "magenta";
-COLOR_RED = "red";
-COLOR_YELLOW = "yellow";
-COLOR_CYAN = "cyan";
-COLOR_BLUE = "blue";
-COLOR_BLACK = "black";
-COLOR_GREEN = "green";
+const COLOR_MAGENTA = "magenta";
+const COLOR_RED = "red";
+const COLOR_YELLOW = "yellow";
+const COLOR_CYAN = "cyan";
+const COLOR_BLUE = "blue";
+const COLOR_BLACK = "black";
+const COLOR_GREEN = "green";
 
 const block = document.getElementById("actionBlock");
 const controller = new InputController(
