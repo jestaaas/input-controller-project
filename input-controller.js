@@ -37,10 +37,9 @@ class InputController {
         for (const [actionName, actionData] of Object.entries(actionsToBind)) {
             if (!this.actionsToBind[actionName]) {
                 this.actionsToBind[actionName] = {
-                    keyboard: {keys: []},
-                    mouse: {buttons: []},
+                    keyboard: {keys: [], active: false},
+                    mouse: {buttons: [], active: false},
                     enabled: true,
-                    active: false
                 };
             }
 
