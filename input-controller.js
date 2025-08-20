@@ -8,15 +8,12 @@ class InputController {
 
     BLUR = "blur";
     FOCUS = "focus";
-    KEY_DOWN = "keydown";
-    KEY_UP = "keyup";
 
     constructor(actionsToBind = {}, target = null) {
         this.actionsToBind = {};
 
         this.enabledActions = new Set();
         this.pressedKeys = new Set();
-        this.activeActions = new Set();
 
         this.target = target;
 
@@ -40,16 +37,28 @@ class InputController {
         for (const [actionName, actionData] of Object.entries(actionsToBind)) {
             if (!this.actionsToBind[actionName]) {
                 this.actionsToBind[actionName] = {
-                    keys: [],
+                    keyboard: {keys: []},
+                    mouse: {buttons: []},
                     enabled: true,
+                    active: false
                 };
             }
 
-            actionData.keys.forEach((keyCode) => {
-                if (!this.actionsToBind[actionName].keys.includes(keyCode)) {
-                    this.actionsToBind[actionName].keys.push(keyCode);
-                }
-            });
+            if (Object.hasOwn(actionData, "keyboard")) {
+                actionData.keyboard.keys.forEach((keyCode) => {
+                    if (!this.actionsToBind[actionName].keyboard.keys.includes(keyCode)) {
+                        this.actionsToBind[actionName].keyboard.keys.push(keyCode);
+                    }
+                })
+            }
+
+            if (Object.hasOwn(actionData, "mouse")) {
+                actionData.mouse.buttons.forEach((button) => {
+                    if (!this.actionsToBind[actionName].mouse.buttons.includes(button)) {
+                        this.actionsToBind[actionName].mouse.buttons.push(button);
+                    }
+                })
+            }
 
             if (this.actionsToBind[actionName].enabled) {
                 this.enabledActions.add(actionName);
@@ -58,7 +67,9 @@ class InputController {
     }
 
     clearAllActiveActions() {
-        this.activeActions.clear();
+        for (const actionName of Object.keys(this.actionsToBind)) {
+            this.actionsToBind[actionName].active = false;
+        }
     }
 
     enableAction(actionName) {
@@ -80,58 +91,15 @@ class InputController {
 
         this.detach();
         this.target = target;
-
-        document.addEventListener(this.KEY_DOWN, this.handleKeyDown);
-        document.addEventListener(this.KEY_UP, this.handleKeyUp);
     }
 
     detach() {
         if (!this.target) return;
 
-        document.removeEventListener(this.KEY_DOWN, this.handleKeyDown);
-        document.removeEventListener(this.KEY_UP, this.handleKeyUp);
-
         this.pressedKeys.clear();
         this.clearAllActiveActions();
     }
 
-    handleKeyDown = (e) => {
-        if (!this.enabled || !this.focused) return;
-        if (this.pressedKeys.has(e.keyCode)) return;
-
-        this.pressedKeys.add(e.keyCode);
-        this.checkActionForKey(e.keyCode, true);
-    };
-
-    handleKeyUp = (e) => {
-        if (!this.enabled || !this.focused) return;
-
-        this.pressedKeys.delete(e.keyCode);
-        this.checkActionForKey(e.keyCode, false);
-    };
-
-    checkActionForKey(keyCode, isKeyDown) {
-        let affectedAction = "";
-
-        for (const [actionName, actionData] of Object.entries(this.actionsToBind)) {
-            if (actionData.keys.includes(keyCode) && this.enabledActions.has(actionName)) {
-                affectedAction = actionName;
-            }
-        }
-
-        const wasActive = this.activeActions.has(affectedAction);
-        const isActive = this.isActionActive(affectedAction);
-
-        if (isKeyDown && isActive && !wasActive) {
-            this.activeActions.add(affectedAction);
-            this.dispatchActionEvent(affectedAction, true);
-        }
-        else if (!isKeyDown && !isActive && wasActive) {
-            this.activeActions.delete(affectedAction);
-            this.dispatchActionEvent(affectedAction, false);
-        }
-    }
-    
     dispatchActionEvent(actionName, isActivated) {
         if (!this.target) return;
 
@@ -146,16 +114,4 @@ class InputController {
         );
     }
 
-    isActionActive(actionName) {
-        if (!this.actionsToBind[actionName] || !this.enabledActions.has(actionName)) {
-            return false;
-        }
-        return this.actionsToBind[actionName].keys.some((keyCode) =>
-            this.isKeyPressed(keyCode)
-        );
-    }
-
-    isKeyPressed(keyCode) {
-        return this.pressedKeys.has(keyCode);
-    }
 }

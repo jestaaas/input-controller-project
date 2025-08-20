@@ -1,14 +1,9 @@
 const initialActions = {
-    attach: { keys: [81], enabled: true }, //q
-    detach: { keys: [69], enabled: true }, //e
-    activation: { keys: [82], enabled: true }, //r
-    deactivation: { keys: [84], enabled: true },//t
-    bind: {keys: [66], enabled: true}, //b
-    left: { keys: [65, 37], enabled: true }, //a, left
-    right: { keys: [68, 39], enabled: true }, //d, right
-    up: { keys: [87, 38], enabled: true }, //w, up
-    down: { keys: [83, 40], enabled: true }, //s, down
-    repeat: {keys: [90, 88], enabled: true}, //z,x
+
+    left: { keyboard: { keys: [65, 37]}, enabled: true }, //a, left
+    right: { keyboard: { keys: [68, 39]}, enabled: true }, //d, right
+    up: { keyboard: { keys: [87, 38]}, enabled: true }, //w, up
+    down: { keyboard: { keys: [83, 40]}, enabled: true }, //s, down
 }
 
 const actionsForBinding = {
