@@ -14,5 +14,15 @@ class InputPlugin {
         return false;
     }
 
-    
+    findAffectedAction(button) {       
+        for (const [actionName, actionData] of Object.entries(this.controller.actionsToBind)) {
+            const source = actionData.sources[this.deviceType];
+
+            if (source && source.buttons.includes(button) && this.controller.enabledActions.has(actionName)) {
+                return actionName;
+            }
+        }
+
+        return "";
+    }
 }

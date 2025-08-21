@@ -1,6 +1,6 @@
 const initialActions1 = {
     random: {
-        keyboard: {buttons: [90, 88]}, //z,x
+        keyboard: {buttons: [90, 88]}, //z, x
         mouse: {buttons: [0]}, //left mouse button
     },
     left: { keyboard: { buttons: [65, 37]}}, //a, left
@@ -31,6 +31,7 @@ let posY = 100;
 inputController.target.addEventListener(inputController.ACTION_ACTIVATED, (e) => {
     switch(e.detail) {
         case "random":
+            console.log("random")
             inputController.target.style.backgroundColor = colors[getRandomInt(colors.length - 1)];
             break;
         case "left":

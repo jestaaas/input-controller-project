@@ -38,6 +38,7 @@ class InputController {
                 this.actionsToBind[actionName] = {
                     sources: {},
                     enabled: true,
+                    pressedButtons: 0
                 };
             }
 

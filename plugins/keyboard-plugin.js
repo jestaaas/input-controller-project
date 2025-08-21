@@ -27,48 +27,51 @@ class KeyboardPlugin extends InputPlugin {
     handleKeyDown = (e) => {
         if (!this.controller.focused || !this.controller.enabled) return;
         if (this.pressedKeys.has(e.keyCode)) return;
-
         this.pressedKeys.add(e.keyCode);
-        this.checkActionForKey(e.keyCode, true);
+
+        let affectedAction = super.findAffectedAction(e.keyCode);
+
+        if (affectedAction === "") return;
+
+        const wasActive = super.wasActionActive(affectedAction);
+        const isActive = this.isActionActive(affectedAction);
+
+        if (isActive && !wasActive) {
+            this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = true;
+            this.controller.dispatchActionEvent(affectedAction, true);
+        }
+        this.controller.actionsToBind[affectedAction].pressedButtons += 1;
     }
 
     handleKeyUp = (e) => {
         if (!this.controller.focused || !this.controller.enabled) return;
 
         this.pressedKeys.delete(e.keyCode);
-        this.checkActionForKey(e.keyCode, false);
-    }
 
-    checkActionForKey(keyCode, isKeyDown) {
-        let affectedAction = "";
+        let affectedAction = super.findAffectedAction(e.keyCode);
 
-        for (const [actionName, actionData] of Object.entries(this.controller.actionsToBind)) {
-            const source = actionData.sources[this.deviceType];
-            if (source && source.buttons.includes(keyCode) && this.controller.enabledActions.has(actionName)) {
-                affectedAction = actionName;
-                break;
-            }
-        }
+        if (affectedAction === "") return;
 
         const wasActive = super.wasActionActive(affectedAction);
         const isActive = this.isActionActive(affectedAction);
 
-        if (isKeyDown && isActive && !wasActive) {
-            this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = true;
-            this.controller.dispatchActionEvent(affectedAction, true);
-        }
-        else if (!isKeyDown && !isActive && wasActive) {
+        if (!isActive && wasActive) {
             this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = false;
             this.controller.dispatchActionEvent(affectedAction, false);
         }
-    }
-    
+        this.controller.actionsToBind[affectedAction].pressedButtons -= 1;
+
+        if (this.controller.actionsToBind[affectedAction].pressedButtons > 0 && this.controller.actionsToBind[affectedAction].pressedButtons < 2) {
+            this.controller.dispatchActionEvent(affectedAction, true);
+        }
+    } 
+
     isActionActive(actionName) {
         if (!this.controller.actionsToBind[actionName] || !this.controller.enabledActions.has(actionName)) {
             return false;
         }
-        return this.controller.actionsToBind[actionName].sources[this.deviceType].buttons.some((keyCode) =>
-            this.isKeyPressed(keyCode)
+        return this.controller.actionsToBind[actionName].sources[this.deviceType].buttons.some((buttonCode) =>
+            this.isKeyPressed(buttonCode)
         );
     }
 }

@@ -21,41 +21,44 @@ class MousePlugin extends InputPlugin {
     }
 
     handleMouseDown = (e) => {
-        if(!this.controller.enabled || !this.controller.focused) return;
+        if (!this.controller.focused || !this.controller.enabled) return;
         if (this.pressedButtons.has(e.button)) return;
-
         this.pressedButtons.add(e.button);
 
-        this.checkActionForKey(e.button, true);
-    }
+        let affectedAction = super.findAffectedAction(e.button);
 
-    handleMouseUp = (e) => {
-        if (!this.controller.enabled || !this.controller.focused) return;
-        this.pressedButtons.delete(e.button);
+        if (affectedAction === "") return;
 
-        this.checkActionForKey(e.button, false);
-    }
-
-    checkActionForKey(buttonCode, isButtonDown) {
-        let affectedAction = "";
-
-        for (const [actionName, actionData] of Object.entries(this.controller.actionsToBind)) {
-            const source = actionData.sources[this.deviceType];
-            if (source && source.buttons.includes(buttonCode) && this.controller.enabledActions.has(actionName)) {
-                affectedAction = actionName;
-                break;
-            }
-        }
         const wasActive = super.wasActionActive(affectedAction);
         const isActive = this.isActionActive(affectedAction);
 
-        if (isButtonDown && isActive && !wasActive) {
+        if (isActive && !wasActive) {
             this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = true;
             this.controller.dispatchActionEvent(affectedAction, true);
         }
-        else if (!isButtonDown && !isActive && wasActive) {
+        this.controller.actionsToBind[affectedAction].pressedButtons += 1;
+    }
+
+    handleMouseUp = (e) => {
+        if (!this.controller.focused || !this.controller.enabled) return;
+
+        this.pressedButtons.delete(e.button);
+
+        let affectedAction = super.findAffectedAction(e.button);
+
+        if (affectedAction === "") return;
+
+        const wasActive = super.wasActionActive(affectedAction);
+        const isActive = this.isActionActive(affectedAction);
+
+        if (!isActive && wasActive) {
             this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = false;
             this.controller.dispatchActionEvent(affectedAction, false);
+        }
+        this.controller.actionsToBind[affectedAction].pressedButtons -= 1;
+
+        if (this.controller.actionsToBind[affectedAction].pressedButtons > 0 && this.controller.actionsToBind[affectedAction].pressedButtons < 2) {
+            this.controller.dispatchActionEvent(affectedAction, true);
         }
     }
 
