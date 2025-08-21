@@ -1,5 +1,5 @@
 class InputController {
-
+    
     enabled = true;
     focused = true;
 
@@ -10,16 +10,15 @@ class InputController {
     FOCUS = "focus";
 
     constructor(actionsToBind = {}, target = null) {
+        
         this.actionsToBind = {};
 
         this.enabledActions = new Set();
-        this.pressedKeys = new Set();
 
         this.target = target;
 
         window.addEventListener(this.BLUR, () => {
             this.focused = false;
-            this.pressedKeys.clear();
             this.clearAllActiveActions();
         });
         window.addEventListener(this.FOCUS, () => {
@@ -37,26 +36,26 @@ class InputController {
         for (const [actionName, actionData] of Object.entries(actionsToBind)) {
             if (!this.actionsToBind[actionName]) {
                 this.actionsToBind[actionName] = {
-                    keyboard: {keys: [], active: false},
-                    mouse: {buttons: [], active: false},
+                    sources: {},
                     enabled: true,
                 };
             }
 
-            if (Object.hasOwn(actionData, "keyboard")) {
-                actionData.keyboard.keys.forEach((keyCode) => {
-                    if (!this.actionsToBind[actionName].keyboard.keys.includes(keyCode)) {
-                        this.actionsToBind[actionName].keyboard.keys.push(keyCode);
-                    }
-                })
-            }
+            for (const deviceType of Object.keys(actionData)) {
+                if (typeof actionData[deviceType] !== 'object' ||
+                     (typeof actionData[deviceType] === 'object' && !actionData[deviceType].buttons)
+                ) continue;
 
-            if (Object.hasOwn(actionData, "mouse")) {
-                actionData.mouse.buttons.forEach((button) => {
-                    if (!this.actionsToBind[actionName].mouse.buttons.includes(button)) {
-                        this.actionsToBind[actionName].mouse.buttons.push(button);
+                if (Object.hasOwn(actionData, deviceType)) {
+                    if (!this.actionsToBind[actionName].sources[deviceType]) {
+                        this.actionsToBind[actionName].sources[deviceType] = {["buttons"]: [], active: false}
                     }
-                })
+                }
+                actionData[deviceType].buttons.forEach(button => {
+                    if (!this.actionsToBind[actionName].sources[deviceType].buttons.includes(button)) {
+                        this.actionsToBind[actionName].sources[deviceType].buttons.push(button);
+                    }
+                });
             }
 
             if (this.actionsToBind[actionName].enabled) {
@@ -67,7 +66,11 @@ class InputController {
 
     clearAllActiveActions() {
         for (const actionName of Object.keys(this.actionsToBind)) {
-            this.actionsToBind[actionName].active = false;
+            for (const source of Object.values(this.actionsToBind[actionName].sources)) {
+                if (typeof source === 'object') {
+                    source.active = false;
+                }
+            }
         }
     }
 
@@ -95,7 +98,6 @@ class InputController {
     detach() {
         if (!this.target) return;
 
-        this.pressedKeys.clear();
         this.clearAllActiveActions();
     }
 
@@ -112,5 +114,4 @@ class InputController {
             newEvent
         );
     }
-
 }

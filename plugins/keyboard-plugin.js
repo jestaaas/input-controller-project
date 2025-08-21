@@ -3,8 +3,8 @@ class KeyboardPlugin extends InputPlugin {
     KEY_DOWN = "keydown";
     KEY_UP = "keyup";
 
-    constructor(controller) {
-        super(controller);
+    constructor(controller, deviceType) {
+        super(controller, deviceType);
         this.pressedKeys = new Set();
 
         this.enablePlugin();
@@ -43,8 +43,10 @@ class KeyboardPlugin extends InputPlugin {
         let affectedAction = "";
 
         for (const [actionName, actionData] of Object.entries(this.controller.actionsToBind)) {
-            if (actionData.keyboard.keys.includes(keyCode) && this.controller.enabledActions.has(actionName)) {
+            const source = actionData.sources[this.deviceType];
+            if (source && source.buttons.includes(keyCode) && this.controller.enabledActions.has(actionName)) {
                 affectedAction = actionName;
+                break;
             }
         }
 
@@ -52,11 +54,11 @@ class KeyboardPlugin extends InputPlugin {
         const isActive = this.isActionActive(affectedAction);
 
         if (isKeyDown && isActive && !wasActive) {
-            this.controller.actionsToBind[affectedAction].keyboard.active = true;
+            this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = true;
             this.controller.dispatchActionEvent(affectedAction, true);
         }
         else if (!isKeyDown && !isActive && wasActive) {
-            this.controller.actionsToBind[affectedAction].keyboard.active = false;
+            this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = false;
             this.controller.dispatchActionEvent(affectedAction, false);
         }
     }
@@ -65,7 +67,7 @@ class KeyboardPlugin extends InputPlugin {
         if (!this.controller.actionsToBind[actionName] || !this.controller.enabledActions.has(actionName)) {
             return false;
         }
-        return this.controller.actionsToBind[actionName].keyboard.keys.some((keyCode) =>
+        return this.controller.actionsToBind[actionName].sources[this.deviceType].buttons.some((keyCode) =>
             this.isKeyPressed(keyCode)
         );
     }

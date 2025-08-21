@@ -1,13 +1,12 @@
 const initialActions1 = {
     random: {
-        keyboard: {keys: [90, 88], active: false}, //z,x
-        mouse: {buttons: [0], active: false}, //left mouse button
-        enabled: true,
+        keyboard: {buttons: [90, 88]}, //z,x
+        mouse: {buttons: [0]}, //left mouse button
     },
-    left: { keyboard: { keys: [65, 37], active: false}, enabled: true }, //a, left
-    right: { keyboard: { keys: [68, 39], active: false}, enabled: true }, //d, right
-    up: { keyboard: { keys: [87, 38], active: false}, enabled: true }, //w, up
-    down: { keyboard: { keys: [83, 40], active: false}, enabled: true }, //s, down
+    left: { keyboard: { buttons: [65, 37]}}, //a, left
+    right: { keyboard: { buttons: [68, 39]}}, //d, right
+    up: { keyboard: { buttons: [87, 38]}}, //w, up
+    down: { keyboard: { buttons: [83, 40]}}, //s, down
 }
 
 const block1 = document.getElementById("actionBlock");
@@ -23,8 +22,8 @@ const COLOR_GREEN = "green";
 const colors = [COLOR_MAGENTA, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_GREEN, COLOR_RED, COLOR_YELLOW];
 
 let inputController = new InputController(initialActions1, block1);
-let keyBoardPlugin = new KeyboardPlugin(inputController);
-let mousePlugin = new MousePlugin(inputController);
+let keyBoardPlugin = new KeyboardPlugin(inputController, "keyboard");
+let mousePlugin = new MousePlugin(inputController, "mouse");
 
 let posX = 100;
 let posY = 100;

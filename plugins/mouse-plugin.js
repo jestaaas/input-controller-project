@@ -3,8 +3,8 @@ class MousePlugin extends InputPlugin {
     MOUSE_DOWN = "mousedown";
     MOUSE_UP = "mouseup";
 
-    constructor(controller) {
-        super(controller)
+    constructor(controller, deviceType) {
+        super(controller, deviceType)
         this.pressedButtons = new Set();
 
         this.enablePlugin();
@@ -40,20 +40,21 @@ class MousePlugin extends InputPlugin {
         let affectedAction = "";
 
         for (const [actionName, actionData] of Object.entries(this.controller.actionsToBind)) {
-            if (actionData.mouse.buttons.includes(buttonCode) && this.controller.enabledActions.has(actionName)) {
+            const source = actionData.sources[this.deviceType];
+            if (source && source.buttons.includes(buttonCode) && this.controller.enabledActions.has(actionName)) {
                 affectedAction = actionName;
+                break;
             }
         }
-        this.wasActionActive(affectedAction);
         const wasActive = super.wasActionActive(affectedAction);
         const isActive = this.isActionActive(affectedAction);
 
         if (isButtonDown && isActive && !wasActive) {
-            this.controller.actionsToBind[affectedAction].mouse.active = true;
+            this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = true;
             this.controller.dispatchActionEvent(affectedAction, true);
         }
         else if (!isButtonDown && !isActive && wasActive) {
-            this.controller.actionsToBind[affectedAction].mouse.active = false;
+            this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = false;
             this.controller.dispatchActionEvent(affectedAction, false);
         }
     }
@@ -62,7 +63,7 @@ class MousePlugin extends InputPlugin {
         if (!this.controller.actionsToBind[actionName] || !this.controller.enabledActions.has(actionName)) {
             return false;
         }
-        return this.controller.actionsToBind[actionName].mouse.buttons.some((buttonCode) =>
+        return this.controller.actionsToBind[actionName].sources[this.deviceType].buttons.some((buttonCode) =>
             this.isButtonPressed(buttonCode)
         );
     }
