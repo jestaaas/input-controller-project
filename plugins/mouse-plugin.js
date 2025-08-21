@@ -34,6 +34,7 @@ class MousePlugin extends InputPlugin {
 
         if (isActive && !wasActive) {
             this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = true;
+            console.log("dispatch true")
             this.controller.dispatchActionEvent(affectedAction, true);
         }
         this.controller.actionsToBind[affectedAction].pressedButtons += 1;
@@ -51,8 +52,9 @@ class MousePlugin extends InputPlugin {
         const wasActive = super.wasActionActive(affectedAction);
         const isActive = this.isActionActive(affectedAction);
 
-        if (!isActive && wasActive) {
+        if (!isActive && wasActive && this.controller.actionsToBind[affectedAction].pressedButtons == 1) {
             this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = false;
+            console.log("dispatch false");
             this.controller.dispatchActionEvent(affectedAction, false);
         }
         this.controller.actionsToBind[affectedAction].pressedButtons -= 1;

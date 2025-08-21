@@ -1,6 +1,6 @@
 const initialActions1 = {
     random: {
-        keyboard: {buttons: [90, 88]}, //z, x
+        keyboard: {buttons: [90, 88, 67]}, //z, x,c
         mouse: {buttons: [0]}, //left mouse button
     },
     left: { keyboard: { buttons: [65, 37]}}, //a, left
