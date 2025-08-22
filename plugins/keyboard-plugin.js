@@ -3,13 +3,13 @@ class KeyboardPlugin extends InputPlugin {
     KEY_DOWN = "keydown";
     KEY_UP = "keyup";
 
-    constructor(controller, deviceType) {
-        super(controller, deviceType);
+    constructor(controller) {
+        super(controller, "keyboard");
         this.pressedKeys = new Set();
 
         this.enablePlugin();
     }
-
+    
     enablePlugin() {
         document.addEventListener(this.KEY_DOWN, this.handleKeyDown);
         document.addEventListener(this.KEY_UP, this.handleKeyUp);
@@ -20,59 +20,18 @@ class KeyboardPlugin extends InputPlugin {
         document.removeEventListener(this.KEY_UP, this.handleKeyUp);
     }
 
-    isKeyPressed(keyCode) {
-        return this.pressedKeys.has(keyCode);
-    }
-
     handleKeyDown = (e) => {
         if (!this.controller.focused || !this.controller.enabled) return;
         if (this.pressedKeys.has(e.keyCode)) return;
+
         this.pressedKeys.add(e.keyCode);
-
-        let affectedAction = super.findAffectedAction(e.keyCode);
-
-        if (affectedAction === "") return;
-
-        const wasActive = super.wasActionActive(affectedAction);
-        const isActive = this.isActionActive(affectedAction);
-
-        if (isActive && !wasActive) {
-            this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = true;
-            console.log("dispatch true")
-            this.controller.dispatchActionEvent(affectedAction, true);
-        }
-        this.controller.actionsToBind[affectedAction].pressedButtons += 1;
+        super.executeDownAction(e.keyCode);
     }
 
     handleKeyUp = (e) => {
         if (!this.controller.focused || !this.controller.enabled) return;
 
         this.pressedKeys.delete(e.keyCode);
-
-        let affectedAction = super.findAffectedAction(e.keyCode);
-
-        if (affectedAction === "") return;
-
-        const wasActive = super.wasActionActive(affectedAction);
-        const isActive = this.isActionActive(affectedAction);
-
-        if (!isActive && wasActive && this.controller.actionsToBind[affectedAction].pressedButtons == 1) {
-            this.controller.actionsToBind[affectedAction].sources[this.deviceType].active = false;
-            console.log("dispatch false");
-            this.controller.dispatchActionEvent(affectedAction, false);
-        }
-        this.controller.actionsToBind[affectedAction].pressedButtons -= 1;
-        if (this.controller.actionsToBind[affectedAction].pressedButtons > 0 && this.controller.actionsToBind[affectedAction].pressedButtons < 2) {
-            this.controller.dispatchActionEvent(affectedAction, true);
-        }
+        super.executeUpAction(e.keyCode);
     } 
-
-    isActionActive(actionName) {
-        if (!this.controller.actionsToBind[actionName] || !this.controller.enabledActions.has(actionName)) {
-            return false;
-        }
-        return this.controller.actionsToBind[actionName].sources[this.deviceType].buttons.some((buttonCode) =>
-            this.isKeyPressed(buttonCode)
-        );
-    }
 }

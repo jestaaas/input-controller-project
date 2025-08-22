@@ -38,7 +38,7 @@ class InputController {
                 this.actionsToBind[actionName] = {
                     sources: {},
                     enabled: true,
-                    pressedButtons: 0
+                    pressedButtonsArray: []
                 };
             }
 
@@ -49,7 +49,7 @@ class InputController {
 
                 if (Object.hasOwn(actionData, deviceType)) {
                     if (!this.actionsToBind[actionName].sources[deviceType]) {
-                        this.actionsToBind[actionName].sources[deviceType] = {["buttons"]: [], active: false}
+                        this.actionsToBind[actionName].sources[deviceType] = {["buttons"]: []}
                     }
                 }
                 actionData[deviceType].buttons.forEach(button => {
@@ -66,12 +66,8 @@ class InputController {
     }
 
     clearAllActiveActions() {
-        for (const actionName of Object.keys(this.actionsToBind)) {
-            for (const source of Object.values(this.actionsToBind[actionName].sources)) {
-                if (typeof source === 'object') {
-                    source.active = false;
-                }
-            }
+        for (const actionData of Object.values(this.actionsToBind)) {
+            actionData.pressedButtonsArray.length = 0;
         }
     }
 

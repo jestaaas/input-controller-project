@@ -1,6 +1,6 @@
 const initialActions1 = {
     random: {
-        keyboard: {buttons: [90, 88, 67]}, //z, x,c
+        keyboard: {buttons: [90, 88, 67]}, //z, x, c
         mouse: {buttons: [0]}, //left mouse button
     },
     left: { keyboard: { buttons: [65, 37]}}, //a, left
@@ -22,8 +22,8 @@ const COLOR_GREEN = "green";
 const colors = [COLOR_MAGENTA, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_GREEN, COLOR_RED, COLOR_YELLOW];
 
 let inputController = new InputController(initialActions1, block1);
-let keyBoardPlugin = new KeyboardPlugin(inputController, "keyboard");
-let mousePlugin = new MousePlugin(inputController, "mouse");
+let keyBoardPlugin = new KeyboardPlugin(inputController);
+let mousePlugin = new MousePlugin(inputController);
 
 let posX = 100;
 let posY = 100;
@@ -32,7 +32,7 @@ inputController.target.addEventListener(inputController.ACTION_ACTIVATED, (e) =>
     switch(e.detail) {
         case "random":
             console.log("random")
-            inputController.target.style.backgroundColor = colors[getRandomInt(colors.length - 1)];
+            inputController.target.style.backgroundColor = colors[getRandomInt(colors.length)];
             break;
         case "left":
             posX -= 50;
